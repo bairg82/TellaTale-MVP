@@ -1,0 +1,55 @@
+"Hello! I need your help to create the initial code for a simple web application called "TellaTale MVP" that will run on Replit. I'm a beginner, so please make the code clear, well-commented, and easy to understand.
+
+The application will use Python with Flask for the backend and HTML, CSS, and basic JavaScript for the frontend.
+
+Here's the desired structure and functionality:
+
+1. Project Structure:
+
+main.py: The Python Flask application.
+templates/index.html: The main HTML page for the frontend.
+static/style.css: A simple CSS file for basic styling.
+2. Backend (main.py - Python Flask):
+
+Create a Flask app.
+Route 1 (/):
+This route should serve the templates/index.html page.
+Route 2 (/generate_tale):
+This route should accept POST requests with JSON data from the frontend.
+The JSON data will contain one field: prompt_text (e.g., "A brave rabbit who learns to share").
+This route should call a Python function get_story_from_ai(user_prompt).
+Placeholder for get_story_from_ai(user_prompt) function: For now, this function should NOT make any real API calls. It should just take the user_prompt string and return a dummy story string, for example: f"This is a placeholder story based on your prompt: '{user_prompt}'. The real story from Gemini will go here later."
+The /generate_tale route should return the story (from the placeholder function) as a JSON response, like {"story": "your generated story here"}.
+Ensure the Flask app runs on host='0.0.0.0' and port=8080 for Replit compatibility.
+3. Frontend (templates/index.html - HTML & JavaScript):
+
+HTML Structure:
+A clear title for the page, like "TellaTale MVP - Your Personal Story Generator".
+A simple heading.
+A text area input field where the user can type their story prompt (e.g., "What kind of tale would you like? Describe the characters, theme, or moral."). Give this textarea an ID.
+A "Generate Tale" button. Give this button an ID.
+A designated <div> area (give it an ID) below the form where the generated story will be displayed. Initially, this div can be empty or say "Your story will appear here...".
+JavaScript Logic (within <script> tags in index.html or in a separate static/script.js if you prefer):
+When the "Generate Tale" button is clicked:
+Get the text from the story prompt textarea.
+Make an asynchronous POST request (e.g., using Workspace) to the /generate_tale endpoint on the backend.
+Send the user's prompt text as JSON in the request body (e.g., {"prompt_text": "user input here"}).
+When the backend responds, parse the JSON response.
+Display the received "story" string in the designated <div> on the page.
+Include basic error handling for the fetch request (e.g., log an error to the console if the request fails).
+4. Styling (static/style.css):
+
+Apply very minimal, clean styling to make the page usable and readable. For example:
+Simple centering for the main content.
+Readable font.
+Make the textarea and button look decent.
+Style the story display area slightly.
+Example Interaction Flow:
+
+User visits the webpage.
+User types "A story about a kind dragon who makes friends with a knight" into the textarea.
+User clicks "Generate Tale".
+JavaScript sends this prompt to the /generate_tale backend endpoint.
+The Flask backend's placeholder function processes it and returns {"story": "This is a placeholder story based on your prompt: 'A story about a kind dragon who makes friends with a knight'. The real story from Gemini will go here later."}.
+JavaScript displays this message in the story area on the webpage.
+Please include comments in the code to explain what each part does. Thank you!"
