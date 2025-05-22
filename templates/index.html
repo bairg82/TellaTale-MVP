@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TellaTale MVP - Your Personal Story Generator</title>
+    
+    <!-- Bootstrap CSS (Replit theme) -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <header class="text-center mb-5">
+            <h1 class="display-4">TellaTale MVP</h1>
+            <p class="lead">Your Personal Story Generator</p>
+        </header>
+        
+        <main>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <!-- Story Prompt Form -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="card-title h5 mb-3">Create Your Tale</h2>
+                            
+                            <div class="mb-3">
+                                <label for="storyPrompt" class="form-label">What kind of tale would you like? Describe the characters, theme, or moral.</label>
+                                <textarea class="form-control" id="storyPrompt" rows="4" placeholder="Example: A brave rabbit who learns to share"></textarea>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button id="generateButton" class="btn btn-primary">Generate Tale</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Story Output Display -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="card-title h5 mb-3">Your Tale</h2>
+                            <div id="storyOutput" class="p-3 border rounded bg-dark-subtle">
+                                <p class="text-muted">Your story will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="mt-5 text-center text-muted">
+            <p><small>TellaTale MVP &copy; 2023</small></p>
+        </footer>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+/* Additional custom styles - minimal as we're using Bootstrap */
+
+/* Make the story output area look like a paper/book */
+#storyOutput {
+    min-height: 200px;
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+}
+
+/* Style for when story is loading */
+.loading {
+    opacity: 0.7;
+}
+
+/* Custom styles for text area */
+#storyPrompt {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
