@@ -668,6 +668,7 @@ dependencies = [
     { name = "google-generativeai" },
     { name = "gunicorn" },
     { name = "psycopg2-binary" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -678,6 +679,7 @@ requires-dist = [
     { name = "google-generativeai", specifier = ">=0.8.5" },
     { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "requests", specifier = ">=2.32.3" },
 ]
 
 [[package]]
