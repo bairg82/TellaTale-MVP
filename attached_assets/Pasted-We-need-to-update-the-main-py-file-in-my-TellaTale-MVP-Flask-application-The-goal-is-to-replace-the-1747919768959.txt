@@ -1,0 +1,39 @@
+We need to update the main.py file in my TellaTale MVP Flask application. The goal is to replace the current placeholder get_story_from_ai(user_prompt) function with one that actually calls the Google Gemini API to generate a children's story.
+
+Please modify the main.py file with the following requirements:
+
+Import Necessary Libraries:
+
+Ensure Flask and jsonify (or similar for sending JSON responses) are imported.
+Import the google-generativeai library as genai.
+Import the os library to access environment variables (for the API key).
+Configure Gemini API Access:
+
+Inside the Python script (e.g., near the top, after imports), retrieve the Gemini API key from Replit Secrets using os.environ.get('GEMINI_API_KEY').
+Configure the genai library with this API key.
+Modify the get_story_from_ai(user_prompt) function:
+
+This function should now use the Gemini API to generate a story.
+Initialize a Gemini generative model. Please use a recent, capable model like 'gemini-1.5-flash-latest'.
+Craft a System Prompt/Instructions for Gemini: Before sending the user_prompt, instruct Gemini on its role and the style of the story. This is critical. Gemini should be told to act as a children's storyteller. The story should:
+Be age-appropriate for young children (e.g., 3-7 years old).
+Incorporate tale therapy principles (e.g., focus on positive resolutions, empathy, gentle lessons, emotional expression in a safe context).
+Follow a clear story structure (e.g., a simple beginning, a challenge or adventure, and a satisfying resolution or moral).
+Be engaging, imaginative, and kind in tone.
+The final output should be just the story itself, ready to be displayed.
+Combine these system instructions with the specific user_prompt (which comes from the parent's input on the webpage) to form the final prompt for the Gemini model.
+Make the call to the Gemini model to generate content.
+Extract the text of the generated story from Gemini's response.
+Error Handling: Implement basic error handling for the Gemini API call.
+If the API key is missing or invalid, the function should return an appropriate error message string.
+If the Gemini API call fails for other reasons (e.g., network issue, content moderation), it should return a user-friendly error message string.
+The function should return the generated story string (if successful) or an error message string (if an error occurred).
+Ensure the /generate_tale Route Works Correctly:
+
+This route should continue to call get_story_from_ai(user_prompt).
+It should return a JSON response. If the story generation is successful, the JSON should be like: {"story": "The generated story from Gemini..."}.
+If there was an error during story generation (either API key issue or Gemini API error), the JSON response should indicate this, perhaps like: {"error": "Sorry, I couldn't create a story right now. Please try again later."} or a more specific error message if appropriate. The frontend JavaScript already has basic error handling, but a clear error message from the backend is good.
+Code Clarity:
+
+Please ensure the code is well-commented, especially the parts related to the Gemini API call, prompt construction, and error handling.
+To summarize, I want to transform the existing main.py so that when a user submits a prompt from the frontend, the backend now calls the real Gemini API to generate a story based on that prompt and the specific storytelling instructions, and then sends that story (or an error message) back to the frontend.

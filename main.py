@@ -1,23 +1,67 @@
 import os
 from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
 
 # Create the Flask application
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "tellatale-secret-key")
 
-# Placeholder function for story generation
+# Configure the Gemini API with the API key from environment variables
+try:
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+except Exception as e:
+    print(f"Hiba a Gemini API konfigurációja során: {str(e)}")
+
 def get_story_from_ai(user_prompt):
     """
-    This is a placeholder function that will later be replaced with actual AI integration.
-    For now, it simply returns a dummy response based on the user's prompt.
+    Generates a children's story using the Google Gemini API based on the user's prompt.
     
     Args:
         user_prompt (str): The user's story prompt
         
     Returns:
-        str: A placeholder story in Hungarian
+        str: A generated story in Hungarian or an error message if generation fails
     """
-    return f"Ez egy helyőrző történet az Ön promptja alapján: '{user_prompt}'. A valódi történet a Geminitől később kerül ide."
+    # Check if the API key is available
+    if not os.environ.get("GEMINI_API_KEY"):
+        return "Hiányzik a Gemini API kulcs. Kérjük, ellenőrizze a konfigurációt."
+    
+    try:
+        # Initialize the Gemini model
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        
+        # Create a system prompt with instructions for the story
+        system_prompt = """
+        Mint gyermek-mesemondó, a feladatod, hogy egy kedves, képzeletgazdag magyar nyelvű mesét alkoss fiatal gyermekek számára (3-7 évesek). 
+        
+        A történetnek a következő jellemzőkkel kell rendelkeznie:
+        - Legyen kornak megfelelő, biztonságos és gyermekbarát
+        - Alkalmazzon meseterápiás elveket (pozitív megoldások, empátia, gyengéd tanulságok, érzelmi kifejezés biztonságos környezetben)
+        - Kövessen egy világos történeti struktúrát (egyszerű kezdet, kihívás vagy kaland, és kielégítő megoldás vagy tanulság)
+        - Legyen lebilincselő, képzeletgazdag és kedves a hangvétele
+        
+        A végső kimenetnek csak a mesét kell tartalmaznia, készen arra, hogy megjelenjen a felhasználó számára.
+        
+        A felhasználó által megadott prompt a következő:
+        """
+        
+        # Combine the system prompt with the user prompt
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        # Generate content with the Gemini model
+        response = model.generate_content(full_prompt)
+        
+        # Extract the generated story text
+        if response and hasattr(response, 'text'):
+            return response.text.strip()
+        else:
+            return "Nem sikerült történetet generálni. Kérjük, próbálja újra később."
+            
+    except Exception as e:
+        print(f"Hiba a történet generálása során: {str(e)}")
+        return f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
 
 # Route for the main page
 @app.route('/')
@@ -29,7 +73,7 @@ def index():
 @app.route('/generate_tale', methods=['POST'])
 def generate_tale():
     """
-    Process the user's story prompt and generate a placeholder story
+    Process the user's story prompt and generate a story using the Gemini API
     
     Expects JSON data with a 'prompt_text' field
     Returns JSON with a 'story' field containing the generated story
@@ -45,8 +89,12 @@ def generate_tale():
         # Get the prompt text from the request
         prompt_text = data['prompt_text']
         
-        # Generate a story using the placeholder function
+        # Generate a story using the Gemini API
         story = get_story_from_ai(prompt_text)
+        
+        # Check if the response indicates an error
+        if story.startswith("Hiányzik a Gemini API kulcs") or story.startswith("Sajnos nem sikerült"):
+            return jsonify({'error': story}), 500
         
         # Return the generated story as JSON
         return jsonify({'story': story})
