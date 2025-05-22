@@ -1,11 +1,18 @@
 import os
-import requests
-import json
 from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
 
 # Create the Flask application
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "tellatale-secret-key")
+
+# Configure the Gemini API with the API key from environment variables
+try:
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+except Exception as e:
+    print(f"Hiba a Gemini API konfigurációja során: {str(e)}")
 
 def get_story_from_ai(user_prompt):
     """
@@ -17,90 +24,44 @@ def get_story_from_ai(user_prompt):
     Returns:
         str: A generated story in Hungarian or an error message if generation fails
     """
-    # Get the API key from environment variables
-    api_key = os.environ.get("GEMINI_API_KEY")
-    
     # Check if the API key is available
-    if not api_key:
+    if not os.environ.get("GEMINI_API_KEY"):
         return "Hiányzik a Gemini API kulcs. Kérjük, ellenőrizze a konfigurációt."
     
     try:
-        # Direct REST API call to Gemini API
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        # Initialize the Gemini model
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
-        # Create a simpler system prompt with instructions for the story
-        prompt = f"""
-Kérlek, írj egy gyerekeknek szóló mesét magyarul a következő téma alapján: {user_prompt}
-
-A mese legyen:
-- 3-7 éves gyerekeknek megfelelő
-- Pozitív üzenetű, kedves történet
-- Egyszerű, érthető szövegezéssel
-- Rövid, max. 1-2 perces felolvasással
-- Meseterápiás alapelveket tartalmazzon
-
-FONTOS: Csak magát a mesét add vissza, semmilyen bevezetőt, kommentárt vagy kérdést ne csatolj hozzá!
-"""
+        # Create a system prompt with instructions for the story
+        system_prompt = """
+        Mint gyermek-mesemondó, a feladatod, hogy egy kedves, képzeletgazdag magyar nyelvű mesét alkoss fiatal gyermekek számára (3-7 évesek). 
         
-        # Prepare the request data according to Gemini API documentation
-        request_data = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 800,
-                "topP": 0.8,
-                "topK": 40
-            }
-        }
+        A történetnek a következő jellemzőkkel kell rendelkeznie:
+        - Legyen kornak megfelelő, biztonságos és gyermekbarát
+        - Alkalmazzon meseterápiás elveket (pozitív megoldások, empátia, gyengéd tanulságok, érzelmi kifejezés biztonságos környezetben)
+        - Kövessen egy világos történeti struktúrát (egyszerű kezdet, kihívás vagy kaland, és kielégítő megoldás vagy tanulság)
+        - Legyen lebilincselő, képzeletgazdag és kedves a hangvétele
         
-        # Send the request to the Gemini API
-        response = requests.post(
-            api_url,
-            json=request_data,
-            headers={"Content-Type": "application/json"}
-        )
+        A végső kimenetnek csak a mesét kell tartalmaznia, készen arra, hogy megjelenjen a felhasználó számára.
         
-        # Check if the request was successful
-        if response.status_code == 200:
-            # Parse the JSON response
-            response_data = response.json()
-            
-            # Extract the generated text from the response
-            if (response_data and 
-                'candidates' in response_data and 
-                len(response_data['candidates']) > 0 and
-                'content' in response_data['candidates'][0] and
-                'parts' in response_data['candidates'][0]['content'] and
-                len(response_data['candidates'][0]['content']['parts']) > 0 and
-                'text' in response_data['candidates'][0]['content']['parts'][0]):
-                
-                # Get the story text
-                story_text = response_data['candidates'][0]['content']['parts'][0]['text'].strip()
-                
-                # Remove any potential HTML tags or special characters
-                story_text = story_text.replace('<', '&lt;').replace('>', '&gt;')
-                
-                return story_text
-            else:
-                return "Nem sikerült történetet generálni. Kérjük, próbálja újra később."
+        A felhasználó által megadott prompt a következő:
+        """
+        
+        # Combine the system prompt with the user prompt
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        # Generate content with the Gemini model
+        response = model.generate_content(full_prompt)
+        
+        # Extract the generated story text
+        if response and hasattr(response, 'text'):
+            return response.text.strip()
         else:
-            # Log the error for debugging
-            print(f"Gemini API hiba: {response.status_code} - {response.text}")
-            return "Nem sikerült kapcsolódni a Gemini API-hoz. Kérjük, próbálja újra később."
+            return "Nem sikerült történetet generálni. Kérjük, próbálja újra később."
             
     except Exception as e:
-        # Log the error for debugging
         print(f"Hiba a történet generálása során: {str(e)}")
-        # Return a simpler error message without the technical details
-        return "Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később."
+        return f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
 
 # Route for the main page
 @app.route('/')
