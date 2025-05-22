@@ -15,9 +15,9 @@ def get_story_from_ai(user_prompt):
         user_prompt (str): The user's story prompt
         
     Returns:
-        str: A placeholder story
+        str: A placeholder story in Hungarian
     """
-    return f"This is a placeholder story based on your prompt: '{user_prompt}'. The real story from Gemini will go here later."
+    return f"Ez egy helyőrző történet az Ön promptja alapján: '{user_prompt}'. A valódi történet a Geminitől később kerül ide."
 
 # Route for the main page
 @app.route('/')
@@ -40,7 +40,7 @@ def generate_tale():
         
         # Check if the required field exists
         if 'prompt_text' not in data or not data['prompt_text'].strip():
-            return jsonify({'error': 'Please provide a prompt for your story'}), 400
+            return jsonify({'error': 'Kérjük, adjon meg egy promptot a történethez'}), 400
         
         # Get the prompt text from the request
         prompt_text = data['prompt_text']
@@ -53,7 +53,7 @@ def generate_tale():
     
     except Exception as e:
         # Handle any errors that occur
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+        return jsonify({'error': f'Hiba történt: {str(e)}'}), 500
 
 # Run the Flask application
 if __name__ == '__main__':

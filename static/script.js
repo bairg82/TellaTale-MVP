@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Validate that there is text in the prompt
         if (!promptText) {
-            showError('Please enter a prompt for your story.');
+            showError('Kérjük, adjon meg egy mesepromptot.');
             return;
         }
         
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if the response is successful
             if (!response.ok) {
                 return response.json().then(data => {
-                    throw new Error(data.error || 'Failed to generate story.');
+                    throw new Error(data.error || 'Nem sikerült létrehozni a mesét.');
                 });
             }
             return response.json();
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             // Show error message
-            showError(error.message || 'An error occurred while generating your story.');
+            showError(error.message || 'Hiba történt a mese létrehozása közben.');
             console.error('Error:', error);
         })
         .finally(() => {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * Shows an error message in the story output area
      */
     function showError(message) {
-        storyOutput.innerHTML = `<p class="text-danger"><strong>Error:</strong> ${message}</p>`;
+        storyOutput.innerHTML = `<p class="text-danger"><strong>Hiba:</strong> ${message}</p>`;
     }
     
     /**
@@ -94,12 +94,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function setLoadingState(isLoading) {
         if (isLoading) {
             generateButton.disabled = true;
-            generateButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+            generateButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generálás...';
             storyOutput.classList.add('loading');
-            storyOutput.innerHTML = '<p class="text-muted">Generating your tale...</p>';
+            storyOutput.innerHTML = '<p class="text-muted">Mese generálása folyamatban...</p>';
         } else {
             generateButton.disabled = false;
-            generateButton.textContent = 'Generate Tale';
+            generateButton.textContent = 'Mese Generálása';
             storyOutput.classList.remove('loading');
         }
     }
