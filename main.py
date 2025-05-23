@@ -30,7 +30,7 @@ def get_story_from_ai(user_prompt):
     
     try:
         # Initialize the Gemini model
-        model = genai.GenerativeModel('gemini-2.5-pro-preview-05-06')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         # Create a system prompt with instructions for the story
         system_prompt = """
