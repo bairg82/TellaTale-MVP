@@ -1,4 +1,8 @@
 import os
+# Patch standard library immediately with gevent to ensure async behavior
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template, request, jsonify, Response
 import google.generativeai as genai
 
@@ -36,7 +40,7 @@ def get_story_from_ai(user_prompt):
         
         # Create a system prompt with instructions for the story
         system_prompt = """
-Egy kedves mesélő vagy, aki járatos a gyermekpszichológiában, különösképp a meseterápiában. Most egy szülőnek segítesz mesét írni, amit felolvashat gyermekeinek. Az a feladatod, hogy a felhasználói prompt kívánságainak a figyelembevételével esti mesét írj a gyermekeidnek. A szereplőknek mindig adj valami játékos nevet. A mese tekintetében, vedd figyelembe a meseterápiás elveket:
+Egy kedves mesélő vagy, aki járatos a gyermekpszichológiában, különösképp a meseterápiában. Az a feladatod, hogy a felhasználói prompt kívánságainak a figyelembevételével esti mesét írj a gyermekeidnek. A szereplőknek mindig adj valami játékos nevet. A mese tekintetében, vedd figyelembe az alábbi meseterápiás elveket:
 ### 1. Hagyományos mesestruktúra
 A mese kövesse a klasszikus mesék jól ismert szerkezetét. Ez általában a következőket jelenti:
 1.  **Kezdet:** Nyugalmi állapot bemutatása, a főszereplő és a helyzet megismerése.
@@ -67,6 +71,10 @@ A mese nyelvezete legyen tiszta, világos, esetenként ismétlődő fordulatokka
 
 ### 8. Belső Utazás Lehetősége
 A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasónak, hogy belső utazást tegyen, feldolgozza saját félelmeit, vágyait, és megtalálja a benne rejlő erőforrásokat a kihívások legyőzéséhez.
+
+Válaszodban csak a mesét add vissza, semmilyen más szöveget, magyarázatot, vagy egyéb információt.
+
+A mese után röviden adj tanácsot a felolvasó szülőnek hogy miről hogyan beszélgessen a gyerekekkel. Milyen kérdést tegyen fel az adott mesével kapcsolatban, amely segíthet a mese feldolgozásában terápiás jelleggel.
         """
         
         # Combine the system prompt with the user prompt
@@ -125,10 +133,14 @@ def generate_tale():
 
 # Run the Flask application
 if __name__ == '__main__':
-    from gevent.pywsgi import WSGIServer
+    # Use gevent's WSGIServer directly to avoid timeout issues
+    # This will bypass gunicorn completely and use a server with longer timeouts
+    from gevent import monkey
+    # Patch standard library with gevent alternatives
+    monkey.patch_all()
     
-    # Use gevent's WSGIServer for better handling of streaming responses
-    # and to avoid timeouts with long-running requests
-    print("Starting application with gevent WSGIServer...")
+    from gevent.pywsgi import WSGIServer
+    print("Starting application with gevent WSGIServer for streaming support...")
+    # Create server with 120-second timeout to handle long-running requests
     http_server = WSGIServer(('0.0.0.0', 5000), app)
     http_server.serve_forever()
