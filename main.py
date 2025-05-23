@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
 
 # Create the Flask application
@@ -17,23 +17,21 @@ except Exception as e:
 def get_story_from_ai(user_prompt):
     """
     Generates a children's story using the Google Gemini API based on the user's prompt.
-    This is a generator function that yields chunks of the story as they arrive from the API.
     
     Args:
         user_prompt (str): The user's story prompt
         
-    Yields:
-        str: Chunks of the generated story in Hungarian or error messages if generation fails
+    Returns:
+        str: A generated story in Hungarian or an error message if generation fails
     """
     # Check if the API key is available
     if not os.environ.get("GEMINI_API_KEY"):
-        yield "Hiányzik a Gemini API kulcs. Kérjük, ellenőrizze a konfigurációt."
-        return
+        return "Hiányzik a Gemini API kulcs. Kérjük, ellenőrizze a konfigurációt."
     
     try:
         # Initialize the Gemini model
+        # model = genai.GenerativeModel('gemini-1.5-flash-latest')
         model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
-        
         # Create a system prompt with instructions for the story
         system_prompt = """
 Egy kedves mesélő vagy, aki járatos a gyermekpszichológiában, különösképp a meseterápiában. Most egy szülőnek segítesz mesét írni, amit felolvashat gyermekeinek. Az a feladatod, hogy a felhasználói prompt kívánságainak a figyelembevételével esti mesét írj a gyermekeidnek. A szereplőknek mindig adj valami játékos nevet. A mese tekintetében, vedd figyelembe a meseterápiás elveket:
@@ -72,19 +70,18 @@ A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasóna
         # Combine the system prompt with the user prompt
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
         
-        # Generate content with the Gemini model with streaming enabled
-        response = model.generate_content(full_prompt, stream=True)
+        # Generate content with the Gemini model
+        response = model.generate_content(full_prompt)
         
-        # Loop through the chunks provided by the streaming response
-        for chunk in response:
-            # Check if the chunk has text content
-            if hasattr(chunk, 'text') and chunk.text:
-                # Yield each text chunk as it arrives
-                yield chunk.text
+        # Extract the generated story text
+        if response and hasattr(response, 'text'):
+            return response.text.strip()
+        else:
+            return "Nem sikerült történetet generálni. Kérjük, próbálja újra később."
             
     except Exception as e:
         print(f"Hiba a történet generálása során: {str(e)}")
-        yield f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
+        return f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
 
 # Route for the main page
 @app.route('/')
@@ -96,11 +93,10 @@ def index():
 @app.route('/generate_tale', methods=['POST'])
 def generate_tale():
     """
-    Process the user's story prompt and generate a story using the Gemini API.
-    Streams the response from the API to the client as it's generated.
+    Process the user's story prompt and generate a story using the Gemini API
     
     Expects JSON data with a 'prompt_text' field
-    Returns a streaming Response with plain text content
+    Returns JSON with a 'story' field containing the generated story
     """
     try:
         # Get data from the request
@@ -113,16 +109,24 @@ def generate_tale():
         # Get the prompt text from the request
         prompt_text = data['prompt_text']
         
-        # Create a streaming response using the generator function
-        return Response(
-            get_story_from_ai(prompt_text),
-            mimetype='text/plain'
-        )
+        # Generate a story using the Gemini API
+        story = get_story_from_ai(prompt_text)
+        
+        # Check if the response indicates an error
+        if story.startswith("Hiányzik a Gemini API kulcs") or story.startswith("Sajnos nem sikerült"):
+            return jsonify({'error': story}), 500
+        
+        # Return the generated story as JSON
+        return jsonify({'story': story})
     
     except Exception as e:
         # Handle any errors that occur
         return jsonify({'error': f'Hiba történt: {str(e)}'}), 500
 
-# Run the Flask application
+# Run the Flask application (only used for direct running without Gunicorn)
 if __name__ == '__main__':
+    # When run directly, use normal Flask development server
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # For production with Gunicorn, use:
+    # gunicorn -c gunicorn_config.py main:app
