@@ -125,4 +125,10 @@ def generate_tale():
 
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    from gevent.pywsgi import WSGIServer
+    
+    # Use gevent's WSGIServer for better handling of streaming responses
+    # and to avoid timeouts with long-running requests
+    print("Starting application with gevent WSGIServer...")
+    http_server = WSGIServer(('0.0.0.0', 5000), app)
+    http_server.serve_forever()
