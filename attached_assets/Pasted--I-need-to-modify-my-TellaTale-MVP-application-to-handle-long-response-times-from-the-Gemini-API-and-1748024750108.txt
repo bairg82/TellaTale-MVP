@@ -1,0 +1,42 @@
+ I need to modify my TellaTale MVP application to handle long response times from the Gemini API and avoid server timeouts. The solution is to implement streaming for the story generation. This requires significant changes to both my main.py backend file and my templates/index.html frontend file.
+
+Please perform the following modifications:
+
+Part 1: Backend Modifications in main.py
+
+The goal is to change the Flask backend so it streams the response from Gemini instead of waiting for the full story.
+
+Convert get_story_from_ai into a Generator:
+
+Modify the get_story_from_ai(user_prompt) function so it no longer returns a single string. It must become a Python generator.
+In the model.generate_content() call, add the parameter stream=True.
+Instead of returning the final response, loop through the chunks provided by the streaming response.
+Inside the loop, yield the text part of each chunk as it arrives.
+Ensure the error handling also yields an error message string if something goes wrong.
+Update the /generate_tale Route to Stream:
+
+This route must no longer call jsonify.
+It should call the new generator function, get_story_from_ai(prompt_text).
+It must return a Flask Response object.
+Pass the generator function directly as the first argument to the Response object.
+Set the mimetype of the Response to 'text/plain' to indicate a stream of plain text.
+Part 2: Frontend Modifications in templates/index.html
+
+The goal is to change the JavaScript so it can receive the stream and display the text as it arrives.
+
+Replace the Workspace Logic:
+
+In the <script> section of index.html, find the addEventListener for the form submission. The existing logic that expects a single JSON object needs to be completely replaced.
+Implement Stream Handling:
+
+UI Feedback: Before starting the Workspace request, disable the "Generate Tale" button and change its text to "Mese készül...". Also, set the initial text of the story display <div> to something like "A mese íródik...".
+Fetch the Stream: Use Workspace to make the POST request to /generate_tale as before.
+Read the Stream:
+Get the response body as a ReadableStream using response.body.getReader().
+Create a TextDecoder to convert the incoming data chunks from bytes to text.
+Use a while (true) loop to continuously read from the stream with reader.read().
+Inside the loop, decode each received value (chunk) and append it to the content of the story display <div>. This will create a "live typing" effect.
+Break the loop when the stream is finished (when done is true).
+Finalize UI: After the loop finishes, re-enable the button and set its text back to "Mese Generálása". You can also remove any "loading" indicators like a blinking cursor.
+Error Handling: Wrap the new Workspace and streaming logic in a try...catch...finally block to handle potential network errors and to ensure the UI is always reset correctly in the finally block.
+Please add comments to the new, more complex code sections (especially the Python generator and the JavaScript stream-reading loop) to help me understand the changes.
