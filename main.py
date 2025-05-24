@@ -67,6 +67,10 @@ A mese nyelvezete legyen tiszta, világos, esetenként ismétlődő fordulatokka
 
 ### 8. Belső Utazás Lehetősége
 A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasónak, hogy belső utazást tegyen, feldolgozza saját félelmeit, vágyait, és megtalálja a benne rejlő erőforrásokat a kihívások legyőzéséhez.
+
+Csak a mesét add vissza, ne adj alcímeket.
+
+A mese végén adj tanácsot a szülőnek, milyen kérdésekkel, hogyan beszélgessen a gyermekeivel a meséről, hogy a meseterápia a lehető leghasznosabb legyen.
         """
         
         # Combine the system prompt with the user prompt
@@ -123,12 +127,3 @@ def generate_tale():
         # Handle any errors that occur
         return jsonify({'error': f'Hiba történt: {str(e)}'}), 500
 
-# Run the Flask application
-if __name__ == '__main__':
-    from gevent.pywsgi import WSGIServer
-    
-    # Use gevent's WSGIServer for better handling of streaming responses
-    # and to avoid timeouts with long-running requests
-    print("Starting application with gevent WSGIServer...")
-    http_server = WSGIServer(('0.0.0.0', 5000), app)
-    http_server.serve_forever()
