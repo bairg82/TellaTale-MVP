@@ -1,8 +1,4 @@
 import os
-# Patch standard library immediately with gevent to ensure async behavior
-from gevent import monkey
-monkey.patch_all()
-
 from flask import Flask, render_template, request, jsonify, Response
 import google.generativeai as genai
 
@@ -40,93 +36,6 @@ def get_story_from_ai(user_prompt):
         
         # Create a system prompt with instructions for the story
         system_prompt = """
-Egy kedves mesélő vagy, aki járatos a gyermekpszichológiában, különösképp a meseterápiában. Az a feladatod, hogy a felhasználói prompt kívánságainak a figyelembevételével esti mesét írj a gyermekeidnek. A szereplőknek mindig adj valami játékos nevet. A mese tekintetében, vedd figyelembe az alábbi meseterápiás elveket:
-### 1. Hagyományos mesestruktúra
-A mese kövesse a klasszikus mesék jól ismert szerkezetét. Ez általában a következőket jelenti:
-1.  **Kezdet:** Nyugalmi állapot bemutatása, a főszereplő és a helyzet megismerése.
-2.  **Konfliktus vagy Hiány:** Megjelenik egy probléma, egy kihívás, vagy valami hiányzik (pl. a királylány elrablása, szegénység, betegség). Ez indítja el a cselekményt.
-3.  **Út vagy Vándorlás:** A főszereplő útnak indul a probléma megoldására. Ez az út lehet fizikai vagy metaforikus. Itt találkozik segítőkkel és akadályokkal.
-4.  **Próbák és Megmérettetések:** A főszereplőnek különböző feladatokat kell megoldania, nehézségeket kell leküzdenie. Ezek a próbák fejlesztik a képességeit, bátorságát.
-5.  **Tetőpont:** A legnagyobb próba, a konfliktus csúcspontja (pl. küzdelem a sárkánnyal, a gonosz legyőzése).
-6.  **Megoldás és Hazatérés:** A konfliktus megoldódik, a főszereplő eléri célját, megszerzi, amit keresett, és hazatér.
-7.  **Végkifejlet:** Az új, rendezett állapot bemutatása, a "boldogan éltek, amíg meg nem haltak" rész.
-
-### 2. Egyértelmű Szereplők (Archetípusok)
-A mesében megjelenő szereplők legyenek tipikusak, archetipikusak (pl. hős, gonosz mostoha, bölcs öreg, segítő állat vagy lény, királylány/királyfi). Ezek a karakterek nem bonyolultak lélektanilag, ami lehetővé teszi a könnyű azonosulást vagy épp a negatív tulajdonságok kivetítését. A jó és a rossz általában tisztán elválik.
-
-### 3. Szimbolikus Nyelv
-A mese gazdag legyen szimbólumokban (pl. erdő, víz, hegy, állatok, tárgyak, színek, számok mint 3, 7, 12). Ezek a szimbólumok mélyebb, tudattalan tartalmakat hordoznak, és lehetővé teszik, hogy a hallgató/olvasó saját belső élményeit, érzéseit kapcsolja hozzájuk anélkül, hogy expliciten kimondaná.
-
-### 4. Nincs Explicit Tanulság
-A mesék, szemben a fabulákkal, általában nem fogalmaznak meg direkt erkölcsi vagy tanító célt. A tanulság, a felismerés a történet átélésén, a szimbólumok megfejtésén és a mesével való foglalkozáson keresztül jön létre.
-
-### 5. Metaforikus Jelleg
-A történet ne literalizálja túlságosan a problémákat. A nehézségek, kihívások legyenek metaforikusak, így tág teret engednek a hallgató/olvasó saját problémáinak behelyettesítésére és feldolgozására.
-
-### 6. Reményteli Végkifejlet
-Bár a mese tartalmazhat nehézségeket, szorongást keltő elemeket, a végkifejletnek a megküzdés, a fejlődés és a helyreállás reményét kell hordoznia. A "boldog vég" (vagy legalábbis a konfliktus megoldása) biztosítja a biztonságot és azt az üzenetet, hogy a nehézségeket le lehet győzni.
-
-### 7. Egyszerű, Ritmusos Nyelv
-A mese nyelvezete legyen tiszta, világos, esetenként ismétlődő fordulatokkal, ritmusos elemekkel. Ez segíti a bevonódást és a történet memorizálását.
-
-### 8. Belső Utazás Lehetősége
-A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasónak, hogy belső utazást tegyen, feldolgozza saját félelmeit, vágyait, és megtalálja a benne rejlő erőforrásokat a kihívások legyőzéséhez.
-
-Válaszodban csak a mesét add vissza, semmilyen más szöveget, magyarázatot, vagy egyéb információt.
-
-A mese után röviden adj tanácsot a felolvasó szülőnek hogy miről hogyan beszélgessen a gyerekekkel. Milyen kérdést tegyen fel az adott mesével kapcsolatban, amely segíthet a mese feldolgozásában terápiás jelleggel.
-        """
-        
-        # Combine the system prompt with the user prompt
-        full_prompt = f"{system_prompt}\n\n{user_prompt}"
-        
-        # Generate content with the Gemini model with streaming enabled
-        response = model.generate_content(full_prompt, stream=True)
-        
-        # Loop through the chunks provided by the streaming response
-        for chunk in response:
-            # Check if the chunk has text content
-            if hasattr(chunk, 'text') and chunk.text:
-                # Yield each text chunk as it arrives
-                yield chunk.text
-            
-    except Exception as e:
-        print(f"Hiba a történet generálása során: {str(e)}")
-        yield f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
-
-# Route for the main page
-@app.route('/')
-def index():
-    """Serve the main page of the application"""
-    return render_template('index.html')
-
-# Route for generating stories
-@app.route('/generate_tale', methods=['POST'])
-def generate_tale():
-    """
-    Process the user's story prompt and generate a story using the Gemini API.
-    Returns the complete story as a JSON response instead of streaming.
-    
-    Expects JSON data with a 'prompt_text' field
-    Returns JSON with a 'story' field containing the generated story
-    """
-    try:
-        # Get data from the request
-        data = request.get_json()
-        
-        # Check if the required field exists
-        if 'prompt_text' not in data or not data['prompt_text'].strip():
-            return jsonify({'error': 'Kérjük, adjon meg egy promptot a történethez'}), 400
-        
-        # Get the prompt text from the request
-        prompt_text = data['prompt_text']
-        
-        try:
-            # Initialize the Gemini model
-            model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
-            
-            # Create a system prompt with instructions for the story
-            system_prompt = """
 Egy kedves mesélő vagy, aki járatos a gyermekpszichológiában, különösképp a meseterápiában. Most egy szülőnek segítesz mesét írni, amit felolvashat gyermekeinek. Az a feladatod, hogy a felhasználói prompt kívánságainak a figyelembevételével esti mesét írj a gyermekeidnek. A szereplőknek mindig adj valami játékos nevet. A mese tekintetében, vedd figyelembe a meseterápiás elveket:
 ### 1. Hagyományos mesestruktúra
 A mese kövesse a klasszikus mesék jól ismert szerkezetét. Ez általában a következőket jelenti:
@@ -158,26 +67,57 @@ A mese nyelvezete legyen tiszta, világos, esetenként ismétlődő fordulatokka
 
 ### 8. Belső Utazás Lehetősége
 A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasónak, hogy belső utazást tegyen, feldolgozza saját félelmeit, vágyait, és megtalálja a benne rejlő erőforrásokat a kihívások legyőzéséhez.
-            """
+        """
+        
+        # Combine the system prompt with the user prompt
+        full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        # Generate content with the Gemini model with streaming enabled
+        response = model.generate_content(full_prompt, stream=True)
+        
+        # Loop through the chunks provided by the streaming response
+        for chunk in response:
+            # Check if the chunk has text content
+            if hasattr(chunk, 'text') and chunk.text:
+                # Yield each text chunk as it arrives
+                yield chunk.text
             
-            # Combine the system prompt with the user prompt
-            full_prompt = f"{system_prompt}\n\n{prompt_text}"
-            
-            # Generate content with the Gemini model (without streaming)
-            response = model.generate_content(full_prompt)
-            
-            # Extract the generated story text
-            if response and hasattr(response, 'text'):
-                story = response.text.strip()
-            else:
-                story = "Nem sikerült történetet generálni. Kérjük, próbálja újra később."
-                
-            # Return the generated story as JSON
-            return jsonify({'story': story})
-                
-        except Exception as e:
-            print(f"Hiba a történet generálása során: {str(e)}")
-            return jsonify({'error': f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"}), 500
+    except Exception as e:
+        print(f"Hiba a történet generálása során: {str(e)}")
+        yield f"Sajnos nem sikerült mesét alkotni ebben a pillanatban. Kérjük, próbálja újra később. (Hiba: {str(e)})"
+
+# Route for the main page
+@app.route('/')
+def index():
+    """Serve the main page of the application"""
+    return render_template('index.html')
+
+# Route for generating stories
+@app.route('/generate_tale', methods=['POST'])
+def generate_tale():
+    """
+    Process the user's story prompt and generate a story using the Gemini API.
+    Streams the response from the API to the client as it's generated.
+    
+    Expects JSON data with a 'prompt_text' field
+    Returns a streaming Response with plain text content
+    """
+    try:
+        # Get data from the request
+        data = request.get_json()
+        
+        # Check if the required field exists
+        if 'prompt_text' not in data or not data['prompt_text'].strip():
+            return jsonify({'error': 'Kérjük, adjon meg egy promptot a történethez'}), 400
+        
+        # Get the prompt text from the request
+        prompt_text = data['prompt_text']
+        
+        # Create a streaming response using the generator function
+        return Response(
+            get_story_from_ai(prompt_text),
+            mimetype='text/plain'
+        )
     
     except Exception as e:
         # Handle any errors that occur
@@ -185,14 +125,10 @@ A mese szerkezete és tartalma adja meg a lehetőséget a hallgatónak/olvasóna
 
 # Run the Flask application
 if __name__ == '__main__':
-    # Use gevent's WSGIServer directly to avoid timeout issues
-    # This will bypass gunicorn completely and use a server with longer timeouts
-    from gevent import monkey
-    # Patch standard library with gevent alternatives
-    monkey.patch_all()
-    
     from gevent.pywsgi import WSGIServer
-    print("Starting application with gevent WSGIServer for streaming support...")
-    # Create server with 120-second timeout to handle long-running requests
+    
+    # Use gevent's WSGIServer for better handling of streaming responses
+    # and to avoid timeouts with long-running requests
+    print("Starting application with gevent WSGIServer...")
     http_server = WSGIServer(('0.0.0.0', 5000), app)
     http_server.serve_forever()
