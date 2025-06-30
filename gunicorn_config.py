@@ -10,7 +10,7 @@ workers = 1
 worker_class = "gevent"
 
 # Timeout settings
-timeout = 120
+timeout = 300
 
 # Reload code when it changes
 reload = True
